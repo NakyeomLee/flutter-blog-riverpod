@@ -44,6 +44,7 @@ class SessionGVM extends Notifier<SessionUser>{
       ScaffoldMessenger.of(mContext!).showSnackBar(
         SnackBar(content: Text("회원가입 실패 : ${responseBody["errorMessage"]}")),
       );
+      return; // return에 값 안 적으면 메서드 그냥 종료되는것 (값 있으면 그 값 반환되는거고)
     }
 
     // 회원가입 success일 경우(정상) => 로그인 화면으로 이동

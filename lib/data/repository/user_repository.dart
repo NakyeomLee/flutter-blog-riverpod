@@ -11,7 +11,7 @@ class UserRepository {
     // 데이터 넘기는게 오래걸리니까 await => 당연히 메서드명 뒤에 async도 달아야됨
     Response response = await dio.post("/join", data: data);
 
-    Map<String, dynamic> body = response.data;
+    Map<String, dynamic> body = response.data; // response, header, body 중에 body에 해당
     Logger().d(body); // test 코드 작성 직접 해보기 (이전에 수업으로 했던 test 코드 가져와서 하면 됨)
     return body;
   }

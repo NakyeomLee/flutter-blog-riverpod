@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-final baseUrl = "http://192.168.0.99:8080";
+final baseUrl = "http://192.168.0.17:8080"; // 장소 바뀔때마다 터미널에서 ip 확인해서 수정하기
 
 //로그인 되면, dio에 jwt 추가하기
 //dio.options.headers['Authorization'] = 'Bearer $_accessToken';

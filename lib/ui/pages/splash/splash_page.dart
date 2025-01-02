@@ -7,7 +7,7 @@ class SplashPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(sessionProvider).autoLogin();
+    ref.read(sessionProvider.notifier).autoLogin();
 
     return Scaffold(
       body: Center(

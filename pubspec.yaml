@@ -32,8 +32,8 @@ dependencies:
     sdk: flutter
   # 라이브러리 버전 문제가 발생하면 pub dev에서 최신 버전으로 업그레이드하세요
   flutter_svg: ^2.0.6
-  flutter_lints: ^2.0.1
-  validators: ^3.0.0
+  flutter_lints: ^2.0.1 # 지금 몰라도 됨
+  validators: ^3.0.0 # 지금 몰라도 됨
   intl: ^0.18.1
   cupertino_icons: ^1.0.2
   dio: ^5.2.0 # 서버와 통신하기 위해 필요한 라이브러리 입니다.

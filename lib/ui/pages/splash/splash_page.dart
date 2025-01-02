@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blog/data/gm/session_gm.dart';
+import 'package:flutter_blog/data/gvm/session_gvm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SplashPage extends ConsumerWidget {

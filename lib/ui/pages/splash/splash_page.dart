@@ -13,6 +13,7 @@ class SplashPage extends ConsumerWidget {
       body: Center(
         child: Image.asset(
           'assets/splash.gif',
+          // infinity : 무한 확장
           width: double.infinity,
           height: double.infinity,
           fit: BoxFit.cover,

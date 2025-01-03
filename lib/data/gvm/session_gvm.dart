@@ -1,8 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blog/_core/utils/my_http.dart';
 import 'package:flutter_blog/data/repository/user_repository.dart';
 import 'package:flutter_blog/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 
 // 로그인 화면이나 회원가입 화면처럼 데이터를 미리 뿌려놓을 필요가 없는 화면은
 // ViewModel이 없고, GlobalViewModel에 붙으면 됨
@@ -13,7 +16,7 @@ class SessionUser {
   String? accessToken;
   bool? isLogin;
 
-  SessionUser({this.id, this.username, this.accessToken, this.isLogin});
+  SessionUser({this.id, this.username, this.accessToken, this.isLogin = false});
 }
 
 class SessionGVM extends Notifier<SessionUser>{
@@ -27,7 +30,43 @@ class SessionGVM extends Notifier<SessionUser>{
     return SessionUser(id: null, username: null, accessToken: null, isLogin: false);
   }
 
-  Future<void> login() async {}
+  // 로그인
+  // async 함수이니까 void여도 Future 붙여야됨(문법이니까 외우기)
+  Future<void> login(String username, String password) async {
+
+    final requestBody = {
+      "username":username,
+      "password":password,
+    };
+
+    final (responseBody, accessToken) = await userRepository.findByUsernameAndPassword(requestBody);
+    
+    if (!responseBody["success"]) {
+      ScaffoldMessenger.of(mContext!).showSnackBar(
+        SnackBar(content: Text("로그인 실패 : ${responseBody["errorMessage"]}")),
+      );
+      return; // return에 값 안 적으면 메서드 그냥 종료되는것 (값 있으면 그 값 반환되는거고)
+    }
+
+    // 1. 토큰을 Storage에 저장
+    await secureStorage.write(key: "accessToken", value: accessToken); // I/O (내부에 비동기 걸려있음 => 오래걸리니까 await)
+
+    // 2. SessionUser 갱신
+    Map<String, dynamic> data = responseBody["response"];
+    state = SessionUser(id: data["id"], username: data["username"], accessToken: accessToken, isLogin: true);
+    
+    // 3. Dio에 토큰 세팅
+    // dio는 메모리에 저장하는거니까 await 안 걸어도됨
+    dio.options.headers = {
+      "Authorization": accessToken
+    };
+
+    // Logger().d(dio.options.headers);
+    
+    // 페이지 이동
+    // popAndPushNamed : 화면 날리기 => 이 경우 로그인 화면을 날리고 게시물 리스트 화면으로 이동
+    Navigator.popAndPushNamed(mContext, "/post/list");
+  }
 
   Future<void> join(String username, String email, String password) async {
 
@@ -51,17 +90,46 @@ class SessionGVM extends Notifier<SessionUser>{
     Navigator.pushNamed(mContext, "/login");
   }
 
-  Future<void> logout() async {}
+  Future<void> logout() async {
+    // 1. 디바이스 토큰 삭제
+    await secureStorage.delete(key: "accessToken"); // I/O (내부에 비동기 걸려있음 => 오래걸리니까 await)
+    
+    // 2. 상태 갱신
+    state = SessionUser();
 
-  Future<void> autoLogin() async {
-    Future.delayed(
-      Duration(seconds: 3), // 3초 딜레이
-          () {
-        Navigator.popAndPushNamed(mContext, "/login"); // 실행하자마자 나올 화면
-      },
-    );
+    // 3. 화면 이동
+    // 로그아웃 화면 날리고 로그인 화면으로 이동
+    Navigator.popAndPushNamed(mContext, "/login");
   }
 
+  // 자동 로그인
+  // 1. 절대 SessionUser가 있을 수 없음
+  Future<void> autoLogin() async {
+    // 1. 토큰 디바이스에서 가져오기
+    String? accessToken = await secureStorage.read(key: "accessToken"); // 오래 걸리니까 await
+    
+    if (accessToken == null) {
+      Navigator.popAndPushNamed(mContext, "/login");
+      return;
+    }
+
+    // 책임 위임
+    Map<String, dynamic> responseBody = await userRepository.autoLogin(accessToken);
+    
+    if (!responseBody["success"]) {
+      Navigator.popAndPushNamed(mContext, "/login");
+      return;
+    }
+
+    // 상태 갱신 (SessionUser 갱신)
+    Map<String, dynamic> data = responseBody["response"];
+    state = SessionUser(id: data["id"], username: data["username"], accessToken: accessToken, isLogin: true);
+
+    dio.options.headers = {"Authorization": accessToken};
+    
+    // 화면 날리고 게시물 리스트 화면으로 이동 (자동 로그인이라 앱 실행하자마자 게시물 리스트 화면부터 나올것)
+    Navigator.popAndPushNamed(mContext, "/post/list");
+  }
 }
 
 final sessionProvider = NotifierProvider<SessionGVM, SessionUser>(() {
